@@ -6,6 +6,7 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Path;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
@@ -507,6 +508,10 @@ public class Clock extends View {
 
         Rect rect = new Rect();
 
+        Paint paint = new Paint();
+        paint.setColor(Color.RED);
+        paint.setStyle(Paint.Style.STROKE);
+
         TextPaint textPaint = new TextPaint();
         textPaint.setColor(hoursValuesColor);
         textPaint.setTypeface(hoursValuesTypeFace);
@@ -517,10 +522,14 @@ public class Clock extends View {
             degreeSpace = DEFAULT_DEGREE_STROKE_WIDTH + 0.06f;
 
         int rText = (int) (mCenterX - (mWidth * DEFAULT_HOURS_VALUES_TEXT_SIZE) - (mWidth * degreeSpace));
+        Path path = new Path();
+        //360 330 300 270
+        //360 270 180 90 0
+        for (int i = 1; i < 13; i++) {
+            int value = i;
+            // for (int i = FULL_ANGLE; i > 0; i = i - clockValueStep) {
+            //int value = i / 30;
 
-        for (int i = FULL_ANGLE; i > 0; i = i - clockValueStep) {
-
-            int value = i / 30;
             String formatted;
             switch (clockValueType) {
 
@@ -548,7 +557,7 @@ public class Clock extends View {
                     break;
 
                 case 0:
-                    if ((i % RIGHT_ANGLE) == 0) {
+                    if ((i % 3) == 0) {
                         textPaint.setTextSize(mWidth * DEFAULT_HOURS_VALUES_TEXT_SIZE);
                         textPaint.setAlpha(FULL_ALPHA);
                     } else {
@@ -563,12 +572,24 @@ public class Clock extends View {
                     break;
             }
 
+            /*int textX = (int) (mCenterX + rText * Math.cos(Math.toRadians(REGULAR_ANGLE - i)));
+            int textY = (int) (mCenterX - rText * Math.sin(Math.toRadians(REGULAR_ANGLE - i)));*/
+            int angle = i * 30;
+            int textX = (int) (mCenterX + rText * Math.sin(Math.toRadians(angle)));
+            int textY = (int) (mCenterX - rText * Math.cos(Math.toRadians(angle)));
+            if (i == 1)
+                path.moveTo(textX, textY);
+            else
+                path.lineTo(textX, textY);
 
-            int textX = (int) (mCenterX + rText * Math.cos(Math.toRadians(REGULAR_ANGLE - i)));
-            int textY = (int) (mCenterX - rText * Math.sin(Math.toRadians(REGULAR_ANGLE - i)));
+            canvas.drawLine(textX, textY, mCenterX, mCenterY, paint);
             textPaint.getTextBounds(formatted, 0, formatted.length(), rect);
             canvas.drawText(formatted, textX - rect.width() / formatted.length(), textY + rect.height() / formatted.length(), textPaint);
         }
+        path.close();
+
+        canvas.drawPath(path, paint);
+        canvas.drawLine(mCenterX - rText, mCenterY, mCenterX, mCenterY, paint);
 
     }
 
